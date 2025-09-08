@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Monsoon — Indian Movie & Series Recommendations</title>
+  <meta name="description" content="Monsoon: Indian cinema recommendations by industry, mood, season, and actors. No login. Static single-file demo."/>
+  <style>
+    :root {
+      --brand-start: #1e3a8a; /* indigo-800 */
+      --brand-end:   #0f766e; /* teal-700 */
+      --text: #0f172a; /* slate-900 */
+      --muted: #475569; /* slate-600 */
+      --card: #ffffff;
+      --bg: #f8fafc; /* slate-50 */
+      --border: #e2e8f0; /* slate-200 */
+      --pill-bg: #99f6e4; /* teal-200 */
+      --pill-text: #115e59; /* teal-800 */
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--text);
+      background: var(--bg);
+      background-image:
+        radial-gradient(1000px 400px at 0% -10%, rgba(30,58,138,0.06), transparent 50%),
+        radial-gradient(800px 300px at 100% 0%, rgba(15,118,110,0.05), transparent 50%);
+      background-repeat: no-repeat;
+    }
+
+    .wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+    .brand-header {
+      background: linear-gradient(90deg, var(--brand-start), var(--brand-end));
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-inner {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
+    }
+    .brand { display: inline-flex; gap: 8px; align-items: center; font-weight: 900; font-size: 20px; color: #fff; text-decoration: none; }
+    .nav a { color: #dbeafe; text-decoration: none; margin-right: 12px; font-size: 14px; }
+    .nav a:hover { text-decoration: underline; }
+    .actions { display: inline-flex; gap: 8px; align-items: center; }
+    .search input {
+      width: 240px; max-width: 42vw;
+      padding: 8px 10px; border: 1px solid #ffffff66; border-radius: 8px;
+      background: #ffffffd9; color: #111827;
+    }
+    #langSelect { padding: 6px 8px; border-radius: 8px; border: 1px solid #ffffff66; background: #ffffffd9; color: #111827; }
+
+    h1 { font-size: 28px; margin: 16px 0; }
+    h2 { font-size: 20px; margin: 12px 0; }
+    p.lead { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 16px;
+    }
+    @media (min-width: 640px) { .grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (min-width: 840px) { .grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      text-decoration: none; color: inherit;
+      transition: box-shadow .15s ease;
+    }
+    .card:hover { box-shadow: 0 10px 20px rgba(2,6,23,.08); }
+    .poster {
+      aspect-ratio: 2/3;
+      display: grid; place-items: center;
+      background: linear-gradient(160deg, #93c5fd, #67e8f9);
+      color: #0c4a6e;
+      padding: 8px; text-align: center;
+      font-weight: 700;
+    }
+    .card .body { padding: 10px; }
+    .card .title { font-weight: 700; line-height: 1.2; }
+    .card .meta { font-size: 12px; color: var(--muted); }
+    .card .synopsis { font-size: 14px; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .pill {
+      font-size: 10px; letter-spacing: .05em; text-transform: uppercase;
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      background: var(--pill-bg); color: var(--pill-text); border: 1px solid #5eead4;
+    }
+
+    .section-head {
+      display: flex; align-items: baseline; justify-content: space-between; margin: 8px 0 8px;
+    }
+    .section-head a.more { color: #1e40af; text-decoration: none; font-size: 14px; }
+    .section-head a.more:hover { text-decoration: underline; }
+
+    .row { margin: 24px 0; }
+
+    .badge { display: inline-flex; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; text-decoration: none; color: inherit; }
+    .badge:hover { box-shadow: 0 8px 14px rgba(2,6,23,.06); }
+    .list-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    @media (min-width: 640px) { .list-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (min-width: 840px) { .list-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+
+    .kv { font-size: 12px; color: var(--muted); }
+    .kv b { color: var(--text); }
+
+    .cast-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+    @media (min-width: 720px) { .cast-list { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+
+    .site-footer { margin: 32px 0 24px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="brand-header">
+    <div class="wrap header-inner">
+      <a href="#/" class="brand"><span>🌧️</span><span>Monsoon</span></a>
+      <nav class="nav">
+        <a href="#/mood">Moods</a>
+        <a href="#/season">Seasons</a>
+        <a href="#/industry">Industries</a>
+        <a href="#/actors">Actors</a>
+      </nav>
+      <div class="actions">
+        <form id="searchForm" class="search">
+          <input id="searchInput" type="text" placeholder="Search titles or actors…" />
+        </form>
+        <select id="langSelect" title="UI language">
+          <option value="en" selected>English</option>
+          <option value="hi">हिन्दी</option>
+          <option value="mr">मराठी</option>
+          <option value="bho">भोजपुरी</option>
+          <option value="ml">മലയാളം</option>
+          <option value="raj">राजस्थानी</option>
+          <option value="gu">ગુજરાતી</option>
+          <option value="ta">தமிழ்</option>
+          <option value="te">తెలుగు</option>
+          <option value="kn">ಕನ್ನಡ</option>
+          <option value="bn">বাংলা</option>
+          <option value="pa">ਪੰਜਾਬੀ</option>
+          <option value="or">ଓଡିଆ</option>
+          <option value="as">অসমীয়া</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main id="app" class="wrap"></main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <small>Monsoon is a simple, no-login recommendation site for Indian cinema. Static demo — no external APIs used.</small>
+    </div>
+  </footer>
+
+  <script>
+    // ===== Data (curated; no APIs) =====
+    const INDUSTRIES = [
+      { slug: 'hindi',      label: 'Hindi (Bollywood)' },
+      { slug: 'tamil',      label: 'Tamil (Kollywood)' },
+      { slug: 'telugu',     label: 'Telugu (Tollywood)' },
+      { slug: 'malayalam',  label: 'Malayalam (Mollywood)' },
+      { slug: 'kannada',    label: 'Kannada (Sandalwood)' },
+      { slug: 'marathi',    label: 'Marathi' },
+      { slug: 'gujarati',   label: 'Gujarati' },
+      { slug: 'bengali',    label: 'Bengali' },
+      { slug: 'punjabi',    label: 'Punjabi' },
+      { slug: 'odia',       label: 'Odia' },
+      { slug: 'assamese',   label: 'Assamese' },
+      { slug: 'bhojpuri',   label: 'Bhojpuri' },
+      { slug: 'rajasthani', label: 'Rajasthani' },
+    ];
+
+    const MOODS = [
+      { slug: 'feel-good', label: 'Feel-good', icon: '😊' },
+      { slug: 'thrilling', label: 'Thrilling', icon: '🔥' },
+      { slug: 'romantic',  label: 'Romantic',  icon: '❤️' },
+      { slug: 'gritty',    label: 'Gritty',    icon: '🕵️' },
+      { slug: 'family',    label: 'Family',    icon: '👨‍👩‍👧‍👦' },
+      { slug: 'offbeat',   label: 'Offbeat',   icon: '🎭' },
+    ];
+    const SEASONS = [
+      { slug: 'monsoon',  label: 'Monsoon (Rainy Season)', icon: '🌧️' },
+      { slug: 'summer',   label: 'Summer', icon: '☀️' },
+      { slug: 'winter',   label: 'Winter', icon: '❄️' },
+      { slug: 'festive',  label: 'Festive', icon: '🪔' },
+    ];
+
+    function cast(name, role, order = 0) {
+      const id = 'p_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g,'');
+      return { id, name, role, order };
+    }
+
+    const TITLES = [
+      // HINDI
+      { id:'t_3idiots', type:'movie', title:'3 Idiots', year:2009, industry:'hindi',
+        synopsis:'Three engineering friends rebel against rote learning and chase what truly matters.',
+        cast:[cast('Aamir Khan','Rancho',0), cast('R. Madhavan','Farhan',1), cast('Sharman Joshi','Raju',2), cast('Kareena Kapoor Khan','Pia',3)],
+        rating:8.6, moods:['feel-good','romantic'], seasons:['summer'] },
+      { id:'t_dangal', type:'movie', title:'Dangal', year:2016, industry:'hindi',
+        synopsis:'A determined father trains his daughters to become champion wrestlers.',
+        cast:[cast('Aamir Khan','Mahavir Singh Phogat',0), cast('Fatima Sana Shaikh','Geeta',1), cast('Sanya Malhotra','Babita',2)],
+        rating:8.4, moods:['feel-good','offbeat'], seasons:['festive'] },
+      { id:'t_andhadhun', type:'movie', title:'Andhadhun', year:2018, industry:'hindi',
+        synopsis:'A blind pianist gets entangled in a darkly comic crime spiral.',
+        cast:[cast('Ayushmann Khurrana','Akash',0), cast('Tabu','Simi',1), cast('Radhika Apte','Sophie',2)],
+        rating:8.0, moods:['thrilling','gritty'], seasons:['winter'] },
+      { id:'t_sacredgames', type:'tv', title:'Sacred Games', year:2018, industry:'hindi',
+        synopsis:'A cop and a crime lord collide in a sprawling Mumbai conspiracy.',
+        cast:[cast('Saif Ali Khan','Sartaj Singh',0), cast('Nawazuddin Siddiqui','Ganesh Gaitonde',1), cast('Radhika Apte','Anjali',2)],
+        rating:8.2, moods:['gritty','thrilling'], seasons:['winter'] },
+      { id:'t_delhicrime', type:'tv', title:'Delhi Crime', year:2019, industry:'hindi',
+        synopsis:'Investigators piece together a landmark case with calm precision.',
+        cast:[cast('Shefali Shah','Vartika Chaturvedi',0), cast('Rasika Dugal','Neeti',1)],
+        rating:8.1, moods:['gritty','offbeat'], seasons:['winter'] },
+      { id:'t_familyman', type:'tv', title:'The Family Man', year:2019, industry:'hindi',
+        synopsis:'A middle-class spy juggles national security and family chaos.',
+        cast:[cast('Manoj Bajpayee','Srikant Tiwari',0), cast('Priyamani','Suchi',1), cast('Sharib Hashmi','JK',2)],
+        rating:8.3, moods:['thrilling','feel-good'], seasons:['festive'] },
+
+      // TAMIL
+      { id:'t_vikram', type:'movie', title:'Vikram', year:2022, industry:'tamil',
+        synopsis:'A special ops team hunts a masked syndicate kingpin.',
+        cast:[cast('Kamal Haasan','Vikram',0), cast('Fahadh Faasil','Amar',1), cast('Vijay Sethupathi','Sandhanam',2)],
+        rating:8.1, moods:['thrilling','gritty'], seasons:['winter'] },
+      { id:'t_superdeluxe', type:'movie', title:'Super Deluxe', year:2019, industry:'tamil',
+        synopsis:'Intersecting stories collide in a wild, tender, and subversive night.',
+        cast:[cast('Vijay Sethupathi','Shilpa',0), cast('Fahadh Faasil','Mugilan',1), cast('Samantha','Vaembu',2)],
+        rating:8.3, moods:['offbeat','gritty'], seasons:['monsoon'] },
+      { id:'t_kaithi', type:'movie', title:'Kaithi', year:2019, industry:'tamil',
+        synopsis:'An ex-con races through one night to save a police force and meet his daughter.',
+        cast:[cast('Karthi','Dilli',0), cast('Narain','Bejoy',1)],
+        rating:8.0, moods:['thrilling'], seasons:['winter'] },
+      { id:'t_soorarai', type:'movie', title:'Soorarai Pottru', year:2020, industry:'tamil',
+        synopsis:'A fiery dreamer sets out to build a low-cost airline against all odds.',
+        cast:[cast('Suriya','Nedumaaran',0), cast('Aparna Balamurali','Bommi',1)],
+        rating:8.7, moods:['feel-good','offbeat'], seasons:['festive'] },
+
+      // TELUGU
+      { id:'t_rrr', type:'movie', title:'RRR', year:2022, industry:'telugu',
+        synopsis:'Two revolutionaries forge a ferocious friendship in colonial India.',
+        cast:[cast('N. T. Rama Rao Jr.','Bheem',0), cast('Ram Charan','Raju',1), cast('Alia Bhatt','Sita',2)],
+        rating:8.0, moods:['thrilling','feel-good'], seasons:['festive'] },
+      { id:'t_baahubali1', type:'movie', title:'Baahubali: The Beginning', year:2015, industry:'telugu',
+        synopsis:'A young man discovers his legacy and rises to reclaim a kingdom.',
+        cast:[cast('Prabhas','Shivudu',0), cast('Rana Daggubati','Bhallaladeva',1), cast('Anushka Shetty','Devasena',2)],
+        rating:7.8, moods:['thrilling'], seasons:['summer'] },
+      { id:'t_kancharapalem', type:'movie', title:'C/o Kancharapalem', year:2018, industry:'telugu',
+        synopsis:'Four tender love stories bloom across a small town.',
+        cast:[cast('Radha Bessy','',0), cast('Subba Rao','',1)],
+        rating:8.3, moods:['offbeat','feel-good'], seasons:['monsoon'] },
+      { id:'t_agent_athreya', type:'movie', title:'Agent Sai Srinivasa Athreya', year:2019, industry:'telugu',
+        synopsis:'A witty small-town detective bites off more than he can chew.',
+        cast:[cast('Naveen Polishetty','Athreya',0), cast('Shruti Sharma','Sneha',1)],
+        rating:7.7, moods:['thrilling','feel-good'], seasons:['winter'] },
+
+      // MALAYALAM
+      { id:'t_kumbalangi', type:'movie', title:'Kumbalangi Nights', year:2019, industry:'malayalam',
+        synopsis:'Four brothers in a fishing village learn love and responsibility.',
+        cast:[cast('Fahadh Faasil','Shammi',0), cast('Shane Nigam','Bobby',1), cast('Soubin Shahir','Saji',2)],
+        rating:8.6, moods:['feel-good','offbeat'], seasons:['monsoon'] },
+      { id:'t_bangalore_days', type:'movie', title:'Bangalore Days', year:2014, industry:'malayalam',
+        synopsis:'Three cousins chase dreams and heartbreak in Bangalore.',
+        cast:[cast('Dulquer Salmaan','Arjun',0), cast('Nivin Pauly','Krishnan',1), cast('Nazriya Nazim','Divya',2)],
+        rating:8.3, moods:['feel-good','romantic'], seasons:['summer'] },
+      { id:'t_drishyam', type:'movie', title:'Drishyam', year:2013, industry:'malayalam',
+        synopsis:'A cable-TV dad shields his family after an accidental crime.',
+        cast:[cast('Mohanlal','Georgekutty',0), cast('Meena','Rani',1)],
+        rating:8.2, moods:['thrilling','gritty'], seasons:['winter'] },
+      { id:'t_premam', type:'movie', title:'Premam', year:2015, industry:'malayalam',
+        synopsis:'A young man’s coming-of-age through three romances.',
+        cast:[cast('Nivin Pauly','George',0), cast('Sai Pallavi','Malar',1), cast('Madonna Sebastian','Celine',2)],
+        rating:8.2, moods:['romantic','feel-good'], seasons:['monsoon'] },
+
+      // KANNADA
+      { id:'t_kgf1', type:'movie', title:'KGF Chapter 1', year:2018, industry:'kannada',
+        synopsis:'A ruthless underdog claws his way into the Kolar Gold Fields.',
+        cast:[cast('Yash','Rocky',0), cast('Srinidhi Shetty','Reena',1)],
+        rating:7.7, moods:['thrilling','gritty'], seasons:['summer'] },
+      { id:'t_kgf2', type:'movie', title:'KGF Chapter 2', year:2022, industry:'kannada',
+        synopsis:'Rocky cements his empire and faces even darker forces.',
+        cast:[cast('Yash','Rocky',0), cast('Sanjay Dutt','Adheera',1), cast('Raveena Tandon','Ramika Sen',2)],
+        rating:8.0, moods:['thrilling'], seasons:['festive'] },
+      { id:'t_kantara', type:'movie', title:'Kantara', year:2022, industry:'kannada',
+        synopsis:'A fiery villager gets entangled in a forest-land conflict and folklore.',
+        cast:[cast('Rishab Shetty','Shiva',0), cast('Sapthami Gowda','Leela',1)],
+        rating:8.1, moods:['offbeat','gritty'], seasons:['monsoon'] },
+      { id:'t_lucia', type:'movie', title:'Lucia', year:2013, industry:'kannada',
+        synopsis:'A lucid-dream pill blurs a projectionist’s reality and fantasy.',
+        cast:[cast('Sathish Ninasam','Nikhil',0), cast('Sruthi Hariharan','Shwetha',1)],
+        rating:8.0, moods:['offbeat','thrilling'], seasons:['winter'] },
+
+      // MARATHI
+      { id:'t_sairat', type:'movie', title:'Sairat', year:2016, industry:'marathi',
+        synopsis:'A tender village romance is tested by brutal caste realities.',
+        cast:[cast('Akash Thosar','Parshya',0), cast('Rinku Rajguru','Archana',1)],
+        rating:8.1, moods:['romantic','gritty'], seasons:['monsoon'] },
+      { id:'t_court', type:'movie', title:'Court', year:2014, industry:'marathi',
+        synopsis:'A folk singer’s trial exposes the absurdities of the system.',
+        cast:[cast('Vira Sathidar','Narayan Kamble',0), cast('Vivek Gomber','Vinay Vora',1)],
+        rating:8.0, moods:['offbeat','gritty'], seasons:['winter'] },
+      { id:'t_killa', type:'movie', title:'Killa', year:2014, industry:'marathi',
+        synopsis:'A boy adapts to a new town, new friends, and swelling monsoon.',
+        cast:[cast('Archit Deodhar','Chinmay',0), cast('Amruta Subhash','Mother',1)],
+        rating:8.0, moods:['feel-good','offbeat'], seasons:['monsoon'] },
+      { id:'t_natsamrat', type:'movie', title:'Natsamrat', year:2016, industry:'marathi',
+        synopsis:'A legendary actor grapples with aging, pride, and family.',
+        cast:[cast('Nana Patekar','Ganpat Ramchandra Belwalkar',0), cast('Medha Manjrekar','Kaveri',1)],
+        rating:8.2, moods:['offbeat','gritty'], seasons:['winter'] },
+
+      // GUJARATI
+      { id:'t_hellaro', type:'movie', title:'Hellaro', year:2019, industry:'gujarati',
+        synopsis:'Women in a desert village find freedom through forbidden dance.',
+        cast:[cast('Jayesh More','Mulji',0), cast('Shraddha Dangar','Manjhri',1)],
+        rating:8.2, moods:['offbeat','feel-good'], seasons:['festive'] },
+      { id:'t_wrongside', type:'movie', title:'Wrong Side Raju', year:2016, industry:'gujarati',
+        synopsis:'A hit-and-run spirals into truth, class, and conscience.',
+        cast:[cast('Pratik Gandhi','Raju',0), cast('Asif Basra','',1)],
+        rating:7.7, moods:['thrilling','gritty'], seasons:['winter'] },
+      { id:'t_kevirite', type:'movie', title:'Kevi Rite Jaish', year:2012, industry:'gujarati',
+        synopsis:'A young man chases the NRI dream and learns what “making it” means.',
+        cast:[cast('Divyang Thakkar','Harish',0), cast('Veronica Kalpana Gautam','',1)],
+        rating:7.4, moods:['feel-good'], seasons:['summer'] },
+      { id:'t_chaljivi', type:'movie', title:'Chal Jivi Laiye!', year:2019, industry:'gujarati',
+        synopsis:'A father-son road trip finds humor, pain, and perspective.',
+        cast:[cast('Aarohi Patel','Ketki',0), cast('Yash Soni','Aditya',1)],
+        rating:8.0, moods:['feel-good','offbeat'], seasons:['monsoon'] },
+
+      // BENGALI
+      { id:'t_patherpanchali', type:'movie', title:'Pather Panchali', year:1955, industry:'bengali',
+        synopsis:'A village boy’s childhood unfolds with aching beauty and realism.',
+        cast:[cast('Subir Banerjee','Apu',0), cast('Karuna Banerjee','Sarbajaya',1)],
+        rating:9.3, moods:['offbeat','family'], seasons:['monsoon'] },
+      { id:'t_charulata', type:'movie', title:'Charulata', year:1964, industry:'bengali',
+        synopsis:'A lonely woman’s inner world awakens when a cousin visits.',
+        cast:[cast('Madhabi Mukherjee','Charu',0), cast('Soumitra Chatterjee','Amal',1)],
+        rating:8.5, moods:['offbeat','romantic'], seasons:['winter'] },
+      { id:'t_nayak', type:'movie', title:'Nayak', year:1966, industry:'bengali',
+        synopsis:'A film star’s train journey becomes a confession booth.',
+        cast:[cast('Uttam Kumar','Arindam',0), cast('Sharmila Tagore','Aditi',1)],
+        rating:8.3, moods:['offbeat'], seasons:['summer'] },
+      { id:'t_bhooter', type:'movie', title:'Bhooter Bhabishyat', year:2012, industry:'bengali',
+        synopsis:'A haunted mansion’s ghosts stage a witty, time-hopping satire.',
+        cast:[cast('Parambrata Chatterjee','Ayan',0), cast('Swastika Mukherjee','',1)],
+        rating:7.8, moods:['feel-good','offbeat'], seasons:['festive'] },
+
+      // PUNJABI
+      { id:'t_qismat', type:'movie', title:'Qismat', year:2018, industry:'punjabi',
+        synopsis:'A breezy romance turns unexpectedly heartfelt.',
+        cast:[cast('Ammy Virk','Shivjit',0), cast('Sargun Mehta','Bani',1)],
+        rating:7.7, moods:['romantic','feel-good'], seasons:['monsoon'] },
+      { id:'t_sufna', type:'movie', title:'Sufna', year:2020, industry:'punjabi',
+        synopsis:'A daydreamer fights to hold onto love and purpose.',
+        cast:[cast('Ammy Virk','Jagjeet',0), cast('Tania','Teg',1)],
+        rating:7.5, moods:['romantic','feel-good'], seasons:['monsoon'] },
+      { id:'t_punjab1984', type:'movie', title:'Punjab 1984', year:2014, industry:'punjabi',
+        synopsis:'A mother searches for her missing son amid turbulent times.',
+        cast:[cast('Diljit Dosanjh','Shiva',0), cast('Kirron Kher','Mother',1)],
+        rating:8.0, moods:['gritty','offbeat'], seasons:['winter'] },
+
+      // ODIA
+      { id:'t_helloarsi', type:'movie', title:'Hello Arsi', year:2018, industry:'odia',
+        synopsis:'A chance encounter on a highway becomes a fragile connection.',
+        cast:[cast('Prakruti Mishra','Arsi',0), cast('Partha Sarathi Ray','Shubhankar',1)],
+        rating:7.6, moods:['offbeat'], seasons:['monsoon'] },
+      { id:'t_tulasiapa', type:'movie', title:'Tulasi Apa', year:2015, industry:'odia',
+        synopsis:'A biopic of Dr. Tulasi Munda, a crusader for education.',
+        cast:[cast('Barsha Nayak','Tulasi',0)],
+        rating:7.4, moods:['offbeat','feel-good'], seasons:['festive'] },
+      { id:'t_kaliraatita', type:'movie', title:'Kalira Atita (Yesterday’s Past)', year:2020, industry:'odia',
+        synopsis:'A man returns to a village swallowed by the sea.',
+        cast:[cast('Pitobash','Gunu',0)],
+        rating:7.8, moods:['offbeat','gritty'], seasons:['monsoon'] },
+
+      // ASSAMESE
+      { id:'t_villagerockstars', type:'movie', title:'Village Rockstars', year:2017, industry:'assamese',
+        synopsis:'A girl in a flood-prone village dreams of forming a rock band.',
+        cast:[cast('Bhanita Das','Dhunu',0)],
+        rating:8.0, moods:['feel-good','offbeat'], seasons:['monsoon'] },
+      { id:'t_bulbul', type:'movie', title:'Bulbul Can Sing', year:2018, industry:'assamese',
+        synopsis:'Teenagers navigate friendship, love, and judgment in rural Assam.',
+        cast:[cast('Arnali Das','Bulbul',0)],
+        rating:7.6, moods:['offbeat'], seasons:['monsoon'] },
+      { id:'t_aamis', type:'movie', title:'Aamis', year:2019, industry:'assamese',
+        synopsis:'A forbidden bond deepens over food — and crosses a line.',
+        cast:[cast('Lima Das','Nirmali',0), cast('Arghadeep Barua','Sumon',1)],
+        rating:8.0, moods:['offbeat','gritty'], seasons:['winter'] },
+
+      // BHOJPURI (editorial)
+      { id:'t_gangamaiyya', type:'movie', title:'Ganga Maiyya Tohe Piyari Chadhaibo', year:1963, industry:'bhojpuri',
+        synopsis:'A landmark Bhojpuri film about faith and perseverance.',
+        cast:[cast('Kumkum','',0), cast('Dharmendra','',1)],
+        rating:7.2, moods:['offbeat','family'], seasons:['festive'] },
+      { id:'t_balam_pardesia', type:'movie', title:'Balam Pardesia', year:1979, industry:'bhojpuri',
+        synopsis:'Songs, longing, and rural romance in a Bhojpuri classic.',
+        cast:[cast('Rakesh Pandey','',0), cast('Padma Khanna','',1)],
+        rating:7.0, moods:['romantic','feel-good'], seasons:['monsoon'] },
+      { id:'t_sasura_bada', type:'movie', title:'Sasura Bada Paisawala', year:2004, industry:'bhojpuri',
+        synopsis:'A lively romance clashes with class and tradition.',
+        cast:[cast('Manoj Tiwari','',0), cast('Rani Chatterjee','',1)],
+        rating:6.8, moods:['feel-good','romantic'], seasons:['festive'] },
+      { id:'t_nirahua_hindustani', type:'movie', title:'Nirahua Hindustani', year:2014, industry:'bhojpuri',
+        synopsis:'A village boy and a city-bred woman clash and connect.',
+        cast:[cast('Dinesh Lal Yadav','',0), cast('Amrapali Dubey','',1)],
+        rating:6.5, moods:['feel-good'], seasons:['summer'] },
+
+      // RAJASTHANI (editorial)
+      { id:'t_bai_chali', type:'movie', title:'Bai Chali Sasariye', year:1988, industry:'rajasthani',
+        synopsis:'A beloved Rajasthani social drama about marriage and customs.',
+        cast:[cast('Neelu Vaghela','',0)],
+        rating:7.1, moods:['offbeat','family'], seasons:['festive'] },
+      { id:'t_supattar_binani', type:'movie', title:'Supattar Binani', year:2019, industry:'rajasthani',
+        synopsis:'An earnest man navigates love, work, and family etiquette.',
+        cast:[cast('Avinash','',0), cast('Kanika Lathar','',1)],
+        rating:6.9, moods:['feel-good'], seasons:['summer'] },
+      { id:'t_kesariya_balam', type:'movie', title:'Kesariya Balam Aavo Hamare Des', year:1999, industry:'rajasthani',
+        synopsis:'Folk melodies colour a tale of love and belonging.',
+        cast:[cast('Upendra','',0), cast('Anila Soni','',1)],
+        rating:7.0, moods:['romantic','feel-good'], seasons:['festive'] },
+    ];
+
+    // ===== App logic =====
+    const $app = document.getElementById('app');
+    const $searchForm = document.getElementById('searchForm');
+    const $searchInput = document.getElementById('searchInput');
+    const $langSelect = document.getElementById('langSelect');
+
+    const UILang = {
+      get: () => localStorage.getItem('monsoon_ui_lang') || 'en',
+      set: (v) => localStorage.setItem('monsoon_ui_lang', v),
+    };
+
+    const fmtYear = (y) => y ? String(y) : '—';
+    const remarkFromRating = (r=0) => {
+      if (r >= 9.2) return 'once in a century';
+      if (r >= 7.6) return 'perfect';
+      if (r >= 6.3) return 'one time watch';
+      return 'time pass';
+    };
+    function titleEmoji(t) {
+      const map = { movie:'🎬', tv:'📺' };
+      return map[t.type] || '🎬';
+    }
+    function el(tag, props={}, children=[]) {
+      const e = document.createElement(tag);
+      Object.entries(props).forEach(([k,v])=>{
+        if (k==='class') e.className = v;
+        else if (k==='html') e.innerHTML = v;
+        else if (k==='style') e.setAttribute('style', v);
+        else e.setAttribute(k,v);
+      });
+      (Array.isArray(children) ? children : [children]).filter(Boolean).forEach(c=>{
+        if (typeof c === 'string') e.appendChild(document.createTextNode(c));
+        else e.appendChild(c);
+      });
+      return e;
+    }
+
+    const PEOPLE = (() => {
+      const map = new Map();
+      for (const t of TITLES) {
+        for (const c of t.cast.slice(0, 10)) {
+          if (!map.has(c.id)) map.set(c.id, { id:c.id, name:c.name, industries:new Set(), appearances:[] });
+          const p = map.get(c.id);
+          p.industries.add(t.industry);
+          p.appearances.push({ titleId:t.id, type:t.type, year:t.year, order:c.order || 99, rating:t.rating });
+        }
+      }
+      return Array.from(map.values()).map(p => ({ ...p, industries:Array.from(p.industries) }));
+    })();
+
+    const TITLE_BY_ID = Object.fromEntries(TITLES.map(t => [t.id, t]));
+
+    function bestPerformances(personId, limit=12) {
+      const p = PEOPLE.find(x => x.id === personId);
+      if (!p) return [];
+      const scored = p.appearances.map(a => {
+        const sig = a.order <= 2 ? 1.3 : a.order <= 5 ? 1.1 : 0.9;
+        const weight = (a.rating || 0) * sig;
+        return { ...a, weight };
+      }).sort((a,b)=> b.weight - a.weight);
+      const seen = new Set();
+      const out = [];
+      for (const a of scored) {
+        if (!seen.has(a.titleId)) {
+          out.push(TITLE_BY_ID[a.titleId]);
+          seen.add(a.titleId);
+          if (out.length >= limit) break;
+        }
+      }
+      return out;
+    }
+
+    function searchTitles(q) {
+      const x = q.toLowerCase();
+      return TITLES.filter(t => t.title.toLowerCase().includes(x) || (t.synopsis && t.synopsis.toLowerCase().includes(x)));
+    }
+    function searchPeople(q) {
+      const x = q.toLowerCase();
+      return PEOPLE.filter(p => p.name.toLowerCase().includes(x));
+    }
+
+    function parseHash() {
+      const h = location.hash.slice(1) || '/';
+      const [path, queryStr] = h.split('?');
+      const seg = path.split('/').filter(Boolean);
+      const q = Object.fromEntries(new URLSearchParams(queryStr || ''));
+      return { seg, q, raw:h };
+    }
+    function navigate(to) { location.hash = to; }
+    window.addEventListener('hashchange', render);
+
+    function TitleCard(t) {
+      const topCast = t.cast.slice(0,3).map(c=>c.name).join(', ');
+      const remark = remarkFromRating(t.rating);
+      const posterText = `${titleEmoji(t)} ${t.title}`;
+      return el('a', { href:`#/title/${t.id}`, class:'card' }, [
+        el('div', { class:'poster' }, posterText),
+        el('div', { class:'body' }, [
+          el('div', { class:'title' }, t.title),
+          el('div', { class:'meta' }, `${fmtYear(t.year)} • ${t.type.toUpperCase()} • ${INDUSTRIES.find(i=>i.slug===t.industry)?.label||''}`),
+          el('div', { class:'meta', style:'margin-top:4px' }, [ el('span', { class:'pill' }, remark) ]),
+          el('p', { class:'synopsis' }, t.synopsis || ''),
+          topCast ? el('div', { class:'meta', style:'margin-top:6px' }, `Starring: ${topCast}`) : null
+        ])
+      ]);
+    }
+
+    function PersonCard(p) {
+      const labs = p.industries.map(s => INDUSTRIES.find(i=>i.slug===s)?.label?.split(' ')[0]).filter(Boolean);
+      return el('a', { href:`#/actor/${p.id}`, class:'card' }, [
+        el('div', { class:'poster' }, `🧑‍🎤 ${p.name}`),
+        el('div', { class:'body' }, [
+          el('div', { class:'title' }, p.name),
+          el('div', { class:'meta' }, labs.join(', ') || 'Actor'),
+          el('div', { class:'meta' }, `${p.appearances.length} appearance(s)`)
+        ])
+      ]);
+    }
+
+    function section(title, moreHref) {
+      const head = el('div', { class:'section-head' }, [
+        el('h2', {}, title),
+        moreHref ? el('a', { href: moreHref, class:'more' }, 'See all') : null
+      ]);
+      return head;
+    }
+    function grid(nodes) {
+      const g = el('div', { class:'grid' });
+      nodes.forEach(n => g.appendChild(n));
+      return g;
+    }
+
+    function HomePage() {
+      const trending = [...TITLES].sort((a,b)=> (b.rating||0) - (a.rating||0)).slice(0, 12);
+      const monsoon = TITLES.filter(t => (t.seasons||[]).includes('monsoon')).slice(0,12);
+      const feelgood = TITLES.filter(t => (t.moods||[]).includes('feel-good')).slice(0,12);
+      const tamil = TITLES.filter(t => t.industry==='tamil').slice(0,12);
+      const malayalam = TITLES.filter(t => t.industry==='malayalam').slice(0,12);
+
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Monsoon — Indian Picks You’ll Actually Watch'));
+      $app.appendChild(el('p', { class:'lead' }, 'No login. Just clean recommendations with synopsis, cast, moods, seasons, and our quick remark.'));
+
+      $app.appendChild(section('Trending in India', '#/season/monsoon'));
+      $app.appendChild(grid(trending.map(TitleCard)));
+
+      $app.appendChild(section('Monsoon Vibes (Rainy Season) 🌧️', '#/season/monsoon'));
+      $app.appendChild(grid(monsoon.map(TitleCard)));
+
+      $app.appendChild(section('Feel-good Tonight 😊', '#/mood/feel-good'));
+      $app.appendChild(grid(feelgood.map(TitleCard)));
+
+      $app.appendChild(section('Tamil Picks', '#/industry/tamil'));
+      $app.appendChild(grid(tamil.map(TitleCard)));
+
+      $app.appendChild(section('Malayalam Picks', '#/industry/malayalam'));
+      $app.appendChild(grid(malayalam.map(TitleCard)));
+
+      const chips = el('div', { class:'row' }, [
+        el('h2', {}, 'Browse by Industry'),
+        el('div', { class:'list-grid' }, INDUSTRIES.map(i =>
+          el('a', { href:`#/industry/${i.slug}`, class:'badge' }, [ '🎞️ ', i.label ])
+        ))
+      ]);
+      $app.appendChild(chips);
+    }
+
+    function IndustryIndexPage() {
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Indian Industries'));
+      const list = el('div', { class:'list-grid' });
+      INDUSTRIES.forEach(i => {
+        const count = TITLES.filter(t=>t.industry===i.slug).length;
+        list.appendChild(el('a', { href:`#/industry/${i.slug}`, class:'badge' }, [`🎞️ ${i.label}`, el('span', { class:'kv' }, ` — ${count} titles`) ]));
+      });
+      $app.appendChild(list);
+    }
+    function IndustryPage(slug) {
+      const ind = INDUSTRIES.find(i=>i.slug===slug);
+      if (!ind) return NotFound();
+      const items = TITLES.filter(t=>t.industry===slug);
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, ind.label));
+      $app.appendChild(grid(items.map(TitleCard)));
+    }
+
+    function MoodIndexPage() {
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Moods'));
+      const list = el('div', { class:'list-grid' });
+      MOODS.forEach(m=>{
+        list.appendChild(el('a', { href:`#/mood/${m.slug}`, class:'badge' }, [`${m.icon} ${m.label}`]));
+      });
+      $app.appendChild(list);
+    }
+    function MoodPage(slug) {
+      const mood = MOODS.find(m=>m.slug===slug);
+      if (!mood) return NotFound();
+      const items = TITLES.filter(t => (t.moods||[]).includes(slug));
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, `${mood.icon} ${mood.label}`));
+      $app.appendChild(grid(items.map(TitleCard)));
+    }
+
+    function SeasonIndexPage() {
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Seasons'));
+      const list = el('div', { class:'list-grid' });
+      SEASONS.forEach(s=>{
+        list.appendChild(el('a', { href:`#/season/${s.slug}`, class:'badge' }, [`${s.icon} ${s.label}`]));
+      });
+      $app.appendChild(list);
+    }
+    function SeasonPage(slug) {
+      const season = SEASONS.find(s=>s.slug===slug);
+      if (!season) return NotFound();
+      const items = TITLES.filter(t => (t.seasons||[]).includes(slug));
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, `${season.icon} ${season.label}`));
+      $app.appendChild(grid(items.map(TitleCard)));
+    }
+
+    function ActorsIndexPage() {
+      const popular = [...PEOPLE].sort((a,b)=> b.appearances.length - a.appearances.length).slice(0, 40);
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Actors'));
+      $app.appendChild(grid(popular.map(PersonCard)));
+    }
+    function ActorPage(id) {
+      const p = PEOPLE.find(x=>x.id===id);
+      if (!p) return NotFound();
+      const best = bestPerformances(id, 16);
+      $app.innerHTML = '';
+      const header = el('div', { class:'row' }, [
+        el('h1', {}, p.name),
+        el('div', { class:'kv' }, [`Industries: `, el('b', {}, p.industries.map(s=>INDUSTRIES.find(i=>i.slug===s)?.label.split(' ')[0]).join(', '))])
+      ]);
+      $app.appendChild(header);
+      $app.appendChild(el('h2', {}, 'Best Performances'));
+      $app.appendChild(grid(best.map(TitleCard)));
+    }
+
+    function TitlePage(id) {
+      const t = TITLE_BY_ID[id];
+      if (!t) return NotFound();
+      $app.innerHTML = '';
+      const remark = remarkFromRating(t.rating);
+      $app.appendChild(el('h1', {}, `${t.title} (${fmtYear(t.year)})`));
+      $app.appendChild(el('div', { class:'kv' }, [
+        `${t.type.toUpperCase()} • ${INDUSTRIES.find(i=>i.slug===t.industry)?.label || ''} • `,
+        'Our remark: ', el('b', {}, remark)
+      ]));
+      $app.appendChild(el('p', {}, t.synopsis || ''));
+      if (t.cast && t.cast.length) {
+        $app.appendChild(el('h2', {}, 'Top Cast'));
+        const ul = el('div', { class:'cast-list' });
+        t.cast.slice(0,12).forEach(c=>{
+          ul.appendChild(el('div', { class:'card' }, [
+            el('div', { class:'body' }, [
+              el('div', { class:'title' }, c.name),
+              el('div', { class:'meta' }, c.role ? `as ${c.role}` : ''),
+              el('a', { href:`#/actor/${c.id}`, class:'more' }, 'View actor')
+            ])
+          ]));
+        });
+        $app.appendChild(ul);
+      }
+    }
+
+    function SearchPage(q, tab='titles') {
+      const qq = (q||'').trim();
+      const isPeople = tab === 'people';
+      const titleResults = qq ? searchTitles(qq) : [];
+      const peopleResults = qq ? searchPeople(qq) : [];
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Search'));
+      $app.appendChild(el('p', { class:'kv' }, `Query: "${qq || '—'}"`));
+      const tabs = el('div', { class:'row' }, [
+        el('a', { href:`#/search?q=${encodeURIComponent(qq)}&tab=titles`, class:'badge' }, 'Titles'),
+        el('a', { href:`#/search?q=${encodeURIComponent(qq)}&tab=people`, class:'badge' }, 'People'),
+      ]);
+      $app.appendChild(tabs);
+      if (!qq) { $app.appendChild(el('p', { class:'kv' }, 'Type something in the top search bar.')); return; }
+      if (!isPeople) $app.appendChild(grid(titleResults.map(TitleCard)));
+      else $app.appendChild(grid(peopleResults.map(PersonCard)));
+    }
+
+    function NotFound() {
+      $app.innerHTML = '';
+      $app.appendChild(el('h1', {}, 'Not Found'));
+      $app.appendChild(el('p', {}, 'The page you requested does not exist.'));
+    }
+
+    function render() {
+      const { seg, q } = parseHash();
+      if (seg.length === 0 || seg[0] === '') return HomePage();
+
+      switch (seg[0]) {
+        case 'industry':
+          return (seg.length === 1) ? IndustryIndexPage() : IndustryPage(seg[1]);
+        case 'mood':
+          return (seg.length === 1) ? MoodIndexPage() : MoodPage(seg[1]);
+        case 'season':
+          return (seg.length === 1) ? SeasonIndexPage() : SeasonPage(seg[1]);
+        case 'actors':
+          return ActorsIndexPage();
+        case 'actor':
+          return ActorPage(seg[1]);
+        case 'title':
+          return TitlePage(seg[1]);
+        case 'search':
+          return SearchPage(q.q || '', q.tab || 'titles');
+        default:
+          return HomePage();
+      }
+    }
+
+    // Events
+    document.getElementById('searchForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const q = document.getElementById('searchInput').value.trim();
+      navigate(`#/search?q=${encodeURIComponent(q)}&tab=titles`);
+    });
+    document.getElementById('langSelect').value = UILang.get();
+    document.getElementById('langSelect').addEventListener('change', (e)=>{
+      UILang.set(e.target.value);
+      alert('Language saved. UI translations coming soon. English stays default for now.');
+    });
+
+    // Bootstrap
+    if (!location.hash) location.hash = '#/';
+    render();
+  </script>
+</body>
+</html>
